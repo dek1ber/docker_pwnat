@@ -1,0 +1,61 @@
+version: "3"
+
+services:
+    attacker:
+        build: ./attacker
+        container_name: ubuntu-172.16.100.200
+        tty: true
+        privileged: true
+        cap_add:
+          - all
+        volumes:
+          - ./exploitCode/:/code/
+        networks:
+          net-172.16.100.0:
+                ipv4_address: 172.16.100.200
+    victim:
+        image: handsonsecurity/seed-ubuntu:large
+        container_name: victim-192.168.1.50
+        tty: true
+        volumes:
+          - ./exploitCode/:/code/
+        cap_add:
+          - ALL
+        privileged: true
+        networks:
+          net-192.168.1.0:
+                ipv4_address: 192.168.1.50
+        command: bash -c "
+              ip route del default  &&
+              ip route add default via 192.168.1.10 dev eth0 &&
+              tail -f /dev/null
+              "
+    vyos:
+        build: ./vyos
+        container_name: router
+        privileged: true
+        cap_add:
+          - ALL
+        volumes:
+          - "/lib/modules:/lib/modules:ro" 
+          - "./vyos/config.init:/config.init"
+          - "./vyos/config:/opt/vyatta/etc/config"
+        entrypoint:
+          - /sbin/init
+        networks:
+          net-172.16.100.0:
+                ipv4_address: 172.16.100.10
+          net-192.168.1.0:
+                ipv4_address: 192.168.1.10
+
+networks:
+  net-172.16.100.0:
+        name: wan-net
+        ipam:
+            config:
+                - subnet: 172.16.100.0/24
+  net-192.168.1.0:
+        name: lan-net
+        ipam:
+            config:
+                - subnet: 192.168.1.0/24
