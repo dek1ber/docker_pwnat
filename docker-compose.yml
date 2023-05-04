@@ -2,8 +2,8 @@ version: "3"
 
 services:
     attacker:
-        build: ./attacker
-        container_name: ubuntu-172.16.100.200
+        image: handsonsecurity/seed-ubuntu:large
+        container_name: attacker
         tty: true
         privileged: true
         cap_add:
@@ -15,7 +15,7 @@ services:
                 ipv4_address: 172.16.100.200
     victim:
         image: handsonsecurity/seed-ubuntu:large
-        container_name: victim-192.168.1.50
+        container_name: victim
         tty: true
         volumes:
           - ./exploitCode/:/code/
